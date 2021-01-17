@@ -1,0 +1,17 @@
+#!/bin/sh
+
+export PATH=$PATH:/usr/bin/python3:/usr/bin/python:/usr/local/bin:/usr/bin/java:/home/ec2-user/.local/bin:/home/ec2-user/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+
+cd /home/ec2-user/scripts
+
+pipenv run python /home/ec2-user/scripts/mongo/config_ini/mongo2csv_iterable_integration_users.py --uri "mongodb://bi-reader:HnpUfQyuiJeHcAsS@worthy-prod-shard-00-00.jtosq.mongodb.net:27017,worthy-prod-shard-00-01.jtosq.mongodb.net:27017,worthy-prod-shard-00-02.jtosq.mongodb.net:27017,worthy-prod-shard-00-03.jtosq.mongodb.net:27017/iterable-integration?ssl=true&replicaSet=worthy-prod-shard-0&authSource=admin&retryWrites=true&readPreference=secondary&readPreferenceTags=nodeType:ANALYTICS&w=majority" --collection "users" --file "/home/ec2-user/mongo_files/iterable_integration_users.csv"
+
+exit_code=$?
+if [[ $exit_code = 0 ]]; then
+      echo "success"
+      python /home/ec2-user/scripts/mongo/mongo_iterable_integration_users/mongo_iterable_integration_users.py
+elif [[ $exit_code = 1 ]]; then
+    echo "a different form of success, maybe"
+else
+    echo "failure: $exit_code"
+fi

@@ -1,0 +1,60 @@
+CREATE OR REPLACE PROCEDURE public.sp_get_pivot()
+	LANGUAGE plpgsql
+AS $$
+	
+	DECLARE
+		rental_cursor CURSOR FOR SELECT column_name FROM information_schema.columns WHERE column_name like 'experiments%' and table_name = 'ods_iterable_integration_user';
+        rental varchar(150);
+        all_rental varchar(3000);
+        truncsql varchar(1000);
+        sql_ins_name varchar(2000);
+        sql_ins_variant varchar(2000); 
+        checker int ;    
+        main_sql varchar(2000);
+	BEGIN		
+	    --# clean the target table	   
+	    all_rental := 'id';
+	    checker := 0;
+		OPEN rental_cursor;
+	    LOOP
+        	FETCH rental_cursor INTO rental;
+        	EXIT WHEN NOT FOUND;
+        
+            IF checker = 3 THEN
+               checker := 0;
+               all_rental := 'id';
+            END IF;
+           
+            -- names  
+            IF rental like '%name%' and rental is not null THEN
+               all_rental := all_rental ||','|| rental;  
+               checker := checker + 1;
+            END IF;
+            -- variant
+            IF rental like '%variant%' and rental is not null THEN
+               all_rental := all_rental ||','|| rental;               
+               checker := checker + 1;
+            END IF;
+            -- createdat           
+            IF rental like '%createdat%' and rental is not null THEN
+               all_rental := all_rental ||','|| rental;
+               checker := checker + 1;                 
+               main_sql := 'INSERT INTO public.ref_iterable_integration_user(id,experiments_name,experiments_variant,experiments_createdat) (SELECT '+all_rental+' FROM public.ods_iterable_integration_user)';
+               ---raise notice 'col: %',main_sql;
+               IF all_rental != '' AND all_rental IS NOT NULL THEN
+                  execute main_sql;
+               END IF;  
+               --raise notice 'col: %',main_sql;
+            END IF;  
+        END LOOP;     
+        CLOSE rental_cursor;
+       
+	END;
+	
+$$
+;
+
+select * from public.ref_iterable_integration_user
+select * from public.ods_iterable_integration_user
+select * from public.v_iterable_integration_user
+select * from  public.ods_iterable_integration_user where experiments_2_name != ''
